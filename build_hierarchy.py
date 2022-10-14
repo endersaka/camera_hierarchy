@@ -1,15 +1,17 @@
 import bpy
 from bpy.types import Operator
 from bpy_extras import object_utils
+from mathutils import Vector
 
 def add_empty_with_name(context, name):
-  # Create an Empty as suggested by https://blender.stackexchange.com/a/51291/71342
+  # An Empty can be created like suggested by https://blender.stackexchange.com/a/51291/71342
   # Confirmed by https://docs.blender.org/api/current/bpy.types.BlendDataObjects.html#bpy.types.BlendDataObjects.new
   # This is the lowest level to do it!
-  obdata = bpy.data.objects.new(name, None)
-  # And this utility is probably equivalent to use `bpy.context.scene.collection.objects.link(cameraroot_data)`
+  # Thought there is a easyer way to do it...
+  # And this utility is probably equivalent to use the previous one in combination with
+  # `bpy.context.scene.collection.objects.link(cameraroot_data)`
   # See https://docs.blender.org/api/current/bpy_extras.object_utils.html#bpy_extras.object_utils.object_data_add
-  empty = object_utils.object_data_add(context, obdata, name=name)
+  empty = object_utils.object_data_add(context, None, name=name)
   empty_id = name.lower() + '_id'
   empty[empty_id] = "%s" % name
 
@@ -38,10 +40,10 @@ def build_camera_hierarchy(context, mode):
   camera_constraint_parent = add_empty_with_name(context, 'CameraConstraintParent')
   
   camera_root.location = context.scene.cursor.location
-  camera_target.location = camera_root.location
-  camera_location_parent.location = camera_root.location + (0.0, -10.0, -10.0)
-  camera.location = camera_location_parent.location
-  camera_constraint_parent.location = camera_location_parent.location
+  camera_target.location = (0.0, 0.0, 0.0) #camera_root.location
+  camera_location_parent.location = (0.0, -10.0, 10.0)
+#  camera.location = camera_location_parent.location
+#  camera_constraint_parent.location = camera_location_parent.location
   
   camera_target.parent = camera_root
   camera_target.parent_type = 'OBJECT'
@@ -55,9 +57,10 @@ def build_camera_hierarchy(context, mode):
   camera_location_parent.parent = camera_root
   camera_location_parent.parent_type = 'OBJECT'
 
-  damped_track = camera_constraint_parent.constraints.new(type='DAMPED_TRACK')
+  damped_track = camera_constraint_parent.constraints.new(type='TRACK_TO')
   damped_track.target = camera_target
   damped_track.track_axis = 'TRACK_NEGATIVE_Z'
+  damped_track.up_axis = 'UP_Y'
 
 
 class OBJECT_OT_build_camera_hierarchy(Operator):
@@ -89,7 +92,7 @@ class OBJECT_OT_build_camera_hierarchy(Operator):
 # The result is a new Item in the menu that calls `execute()` method of the
 # Operator class `OBJECT_OT_build_camera_hierarchy` when selected by the user
 # interaction.
-def add_camera_hierarchy_buttons(self, context):
+def draw_camera_hierarchy_menu_items(self, context):
   """Provides Camera Hierarchy entries in the Add Object > Camera menu"""
   if context.mode == 'OBJECT':
     self.layout.operator(
@@ -98,6 +101,13 @@ def add_camera_hierarchy_buttons(self, context):
         icon="VIEW_CAMERA"
     ).mode = "DOLLY"
 
+
+def append_draw_function():
+    bpy.types.VIEW3D_MT_camera_add.append(draw_camera_hierarchy_menu_items)
+
+
+def remove_draw_function():
+    bpy.types.VIEW3D_MT_camera_add.remove(draw_camera_hierarchy_menu_items)
 
 # Convenience list of classes to register/unregister.
 classes = (
@@ -110,7 +120,7 @@ def register():
     for cls in classes:
         register_class(cls)
 
-    bpy.types.VIEW3D_MT_camera_add.append(add_camera_hierarchy_buttons)
+    append_draw_function()
 
 
 def unregister():
@@ -118,8 +128,9 @@ def unregister():
     for cls in classes:
         unregister_class(cls)
 
-    bpy.types.VIEW3D_MT_camera_add.remove(add_camera_hierarchy_buttons)
+    remove_draw_function()
 
-
+# This allows you to run the script directly from Blender's Text editor
+# to test the add-on without having to install it.
 if __name__ == "__main__":
     register()

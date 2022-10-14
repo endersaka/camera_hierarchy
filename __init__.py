@@ -43,5 +43,7 @@ def unregister():
     # composition_guides_menu.unregister()
 
 
+# This allows you to run the script directly from Blender's Text editor
+# to test the add-on without having to install it.
 if __name__ == "__main__":
     register()
