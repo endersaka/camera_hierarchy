@@ -65,11 +65,17 @@ class OBJECT_OT_build_camera_hierarchy(Operator):
   bl_label = "Build Camera Hierarchy"
   bl_description = "Build a Camera Hierarchy"
   bl_options = {'REGISTER', 'UNDO'}
-
-  mode: bpy.props.EnumProperty(items=(('DOLLY', 'Dolly', 'Dolly Hierarchy')),
-                               name='mode',
-                               description='Type of camera hierarchy to create.',
-                               default='DOLLY')
+  
+  mode: bpy.props.EnumProperty(
+    items=(
+      ('DOLLY', 'Dolly', 'Dolly rig'),
+      ('CRANE', 'Crane', 'Crane rig',),
+      ('2D', '2D', '2D rig')
+    ),
+    name="mode",
+    description="Type of camera to create",
+    default="DOLLY"
+  )
 
   def execute(self, context):
     # Build the hierarchy.
