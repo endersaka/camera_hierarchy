@@ -39,12 +39,12 @@ def build_camera_hierarchy(context, mode):
   # Add Camera Constraint Parent empty
   camera_constraint_parent = add_empty_with_name(context, 'CameraConstraintParent')
   
+  # Set required locations
   camera_root.location = context.scene.cursor.location
-  camera_target.location = (0.0, 0.0, 0.0) #camera_root.location
+  camera_target.location = (0.0, 0.0, 0.0)
   camera_location_parent.location = (0.0, -10.0, 10.0)
-#  camera.location = camera_location_parent.location
-#  camera_constraint_parent.location = camera_location_parent.location
   
+  # Setup hierarchy
   camera_target.parent = camera_root
   camera_target.parent_type = 'OBJECT'
   
@@ -86,12 +86,19 @@ class OBJECT_OT_build_camera_hierarchy(Operator):
     return {'FINISHED'}
 
 
-# Sort of Action or Hook callback for Blender that we append to the Add Object
-# > Camera menu during the registration of tthis Addon and remove during the
-# unregistration.
-# The result is a new Item in the menu that calls `execute()` method of the
-# Operator class `OBJECT_OT_build_camera_hierarchy` when selected by the user
+# Draw function that populates the `Add Object > Camera` menu with our custom
+# menu items.
+#
+# It is appended to the existing draw functions during the registration phase
+# of this Addon and removed during the unregistration phase.
+#
+# The result so far is a new Item in the menu that calls `execute()` method of
+# the Operator class `OBJECT_OT_build_camera_hierarchy` when selected by user
 # interaction.
+#
+# `self` and `context` are set by the caller that is the object to wich this
+# function is appended as can be easyly understood reading
+# https://docs.blender.org/api/current/bpy.types.Menu.html#extending-menus
 def draw_camera_hierarchy_menu_items(self, context):
   """Provides Camera Hierarchy entries in the Add Object > Camera menu"""
   if context.mode == 'OBJECT':
